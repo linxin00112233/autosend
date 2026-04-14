@@ -1,0 +1,28 @@
+name: 招聘看板定时推送
+
+on:
+  schedule:
+    # 这里的 cron 是 UTC 时间。
+    # 北京时间 10:00 是 UTC 02:00
+    # 每两小时执行一次：02:00, 04:00, 06:00 ... 
+    # 如果你想现在就开始测试，可以先改小一点，或者点击 GitHub 上的 Run workflow
+    - cron: '0 */2 * * *'
+  workflow_dispatch: # 这个选项让你可以在 GitHub 页面上手动点击按钮立即运行
+
+jobs:
+  send-report:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 检查代码
+        uses: actions/checkout@v3
+
+      - name: 设置 Python 环境
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: 安装依赖
+        run: pip install requests
+
+      - name: 执行推送脚本
+        run: python auto_send.py
