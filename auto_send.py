@@ -1,6 +1,6 @@
 import requests
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 
 def fetch_and_send():
     # 1. 配置信息
@@ -68,7 +68,6 @@ def fetch_and_send():
 
         # 7. 解析评分分布 (对应文档 5.6)
         score_buckets = data.get("score_buckets", [])
-        # 计算评分分布总人数（有些可能还没评分）
         score_total = sum(item['count'] for item in score_buckets)
         score_lines = []
         for b in score_buckets:
@@ -77,7 +76,11 @@ def fetch_and_send():
         score_str = "\n".join(score_lines)
 
         # 8. 组装 Markdown 消息
-        now_str = datetime.now().strftime('%Y-%m-%d %H:%M')
+        # 重点：修正 GitHub Actions 的 8 小时时差
+        # utcnow 获取标准时间，timedelta(hours=8) 补偿到北京/香港时间
+        bj_time = datetime.utcnow() + timedelta(hours=8)
+        now_str = bj_time.strftime('%Y-%m-%d %H:%M')
+
         report_content = (
             f"📊 **招聘看板数据分析报告**\n"
             f"生成时间: {now_str}\n"
@@ -110,6 +113,4 @@ def fetch_and_send():
         print(f"程序运行出错: {e}")
 
 if __name__ == "__main__":
-    # GitHub Actions 会定时触发整个脚本运行
-    # 所以这里只需要执行一次函数即可，不需要 while True 循环
     fetch_and_send()
